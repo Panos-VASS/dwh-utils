@@ -1,0 +1,18 @@
+{
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "admin",
+        "password": "admin123",
+        "dbname": "example_db"
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "example.log"
+    },
+    "etl": {
+        "source": "/data/source",
+        "destination": "/data/destination",
+        "schedule": "daily"
+    }
+}

@@ -4,7 +4,8 @@ import pandas as pd
 import tempfile
 import datetime
 import inspect
-
+import json
+import inspect
 
 
 def is_notebook():
@@ -243,3 +244,53 @@ def sample_data(df, n=100, frac=None, stratify_by=None, random_state=None):
         sampled_df = df.sample(n=n, frac=frac, random_state=random_state)
     
     return sampled_df.reset_index(drop=True)
+
+from IPython import get_ipython
+
+
+def load_config(notebook_filename):
+    """
+    Loads the configuration from a JSON file based on the script or notebook filename.
+
+    The function attempts to determine the base name from the filename,
+    constructs the path to the corresponding JSON configuration file located in the '../config' directory,
+    and reads the configuration into a dictionary.
+
+    Parameters:
+    - notebook_filename (str): Full path of the notebook or script filename.
+
+    Raises:
+        FileNotFoundError: If the configuration file does not exist.
+
+    Returns:
+        dict: The configuration data.
+    """
+    try:
+        # Extract the base name from the filename (example_e.py -> example)
+        script_name = os.path.basename(notebook_filename)
+        base_name = os.path.splitext(script_name)[0].split('_')[0]
+        
+        # Construct the path to the JSON configuration file
+        base_path = os.path.abspath(os.path.join(os.path.dirname(notebook_filename), '..'))
+        config_dir = os.path.join(base_path, 'config')
+        config_file = os.path.join(config_dir, f'{base_name}.json')
+        
+        # Read the JSON file into a dictionary
+        if os.path.exists(config_file):
+            with open(config_file, 'r') as file:
+                config = json.load(file)
+        else:
+            raise FileNotFoundError(f"Config file {config_file} not found.")
+        
+        return config
+    
+    except Exception as e:
+        raise RuntimeError(f"Error loading config: {str(e)}")
+
+# Example usage with notebook_filename provided
+notebook_filename = 'c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\example_e.py'
+try:
+    config_data = load_config(notebook_filename)
+    print(config_data)
+except Exception as e:
+    print(f"Error: {str(e)}")

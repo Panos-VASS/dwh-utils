@@ -5,7 +5,6 @@ import pandas as pd
 import tempfile
 import datetime
 
-
 #%%
 def download_and_parse_csv(url, column_delimiter=None):
     """

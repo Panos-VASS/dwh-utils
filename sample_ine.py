@@ -15,3 +15,5 @@ force_int_conversion(df, 'Provincias')
 # %%
 adjust_dtype(df)
 # %%
+df2 = sample_data(df, n=200)
+# %%
