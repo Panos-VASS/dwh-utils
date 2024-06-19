@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../d
 # Import the utils module
 import utils
 
+#%%
 def get_notebook_filename():
     """
     Helper function to get the notebook filename in a Jupyter environment.
@@ -22,6 +23,7 @@ def get_notebook_filename():
 #%%
 
 notebook_filename = get_notebook_filename()
+
 if notebook_filename:
     # Running in a Jupyter notebook
     config = utils.load_config(notebook_filename=notebook_filename)
@@ -35,3 +37,11 @@ print(config)
 
 
 # %%
+    host = "localhost"
+    username = "root"
+    password = "root"
+    database = "example_db"
+    table = "sales"
+
+    # Call the function to download data from MySQL
+    df = download_from_mysql(host, username, password, database, table)

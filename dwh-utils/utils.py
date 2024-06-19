@@ -5,7 +5,8 @@ import tempfile
 import datetime
 import inspect
 import json
-import inspect
+from datetime import datetime
+import mysql.connector
 
 
 def is_notebook():
@@ -23,13 +24,17 @@ def is_notebook():
 
 
 
-def download_and_parse_csv(url, column_delimiter=None):
+
+def download_and_parse_csv(url, column_delimiter=None, load_s3=False, output_folder='../../s3/temp_files', script_filename=None):
     """
-    Downloads a CSV file from a given URL, parses it into a Pandas DataFrame, and deletes the CSV file.
+    Downloads a CSV file from a given URL, parses it into a Pandas DataFrame, and optionally uploads it as a CSV to a specified folder.
 
     Parameters:
     url (str): The URL of the CSV file.
-    use_tab_delimiter (bool): Whether to use a tab delimiter. Default is False.
+    column_delimiter (str): The delimiter for columns in the CSV file.
+    load_s3 (bool): Whether to save the DataFrame as a CSV file in the specified folder.
+    output_folder (str): The folder to save the CSV file if load_s3 is True.
+    script_filename (str): The full path of the script file for naming the output file.
 
     Returns:
     pd.DataFrame: The CSV content as a Pandas DataFrame.
@@ -47,12 +52,25 @@ def download_and_parse_csv(url, column_delimiter=None):
 
             print(f"CSV file successfully downloaded and saved to {temp_file_path}")
 
-            if column_delimiter != None:
+            if column_delimiter is not None:
                 df = pd.read_csv(temp_file_path, delimiter=column_delimiter)
             else:
                 df = pd.read_csv(temp_file_path)
 
             print(f"CSV file successfully loaded into DataFrame and deleted from {temp_file_path}")
+
+            if load_s3:
+                current_date = datetime.now().strftime('%Y%m%d')
+                date_folder = os.path.join(output_folder, current_date)
+                os.makedirs(date_folder, exist_ok=True)
+
+                script_name = os.path.splitext(os.path.basename(script_filename))[0] if script_filename else 'output'
+                timestamp = datetime.now().strftime('%H%M%S')
+                output_file_name = f"{script_name}_{timestamp}.csv"
+                output_file_path = os.path.join(date_folder, output_file_name)
+
+                df.to_csv(output_file_path, index=False)
+                print(f"File successfully uploaded to {output_file_path}")
 
             return df
 
@@ -60,24 +78,39 @@ def download_and_parse_csv(url, column_delimiter=None):
         print(f"Failed to download the file: {e}")
         return None
 
-def download_and_parse_json(url):
+def download_and_parse_json(url, load_s3=False, output_folder='../../s3/temp_files', script_filename=None):
     """
-    Downloads a JSON file from a given URL and parses it into a Pandas DataFrame.
+    Downloads a JSON file from a given URL, parses it into a Pandas DataFrame, and optionally uploads it as a CSV to a specified folder.
 
     Parameters:
     url (str): The URL of the JSON file.
+    load_s3 (bool): Whether to save the DataFrame as a CSV file in the specified folder.
+    output_folder (str): The folder to save the CSV file if load_s3 is True.
+    script_filename (str): The full path of the script file for naming the output file.
 
     Returns:
     pd.DataFrame or None: The JSON content as a Pandas DataFrame, or None if failed to download or parse.
     """
     try:
-        
         response = requests.get(url)
         response.raise_for_status()
 
         df = pd.DataFrame(response.json())
 
         print(f"JSON file successfully downloaded and parsed")
+
+        if load_s3:
+            current_date = datetime.now().strftime('%Y%m%d')
+            date_folder = os.path.join(output_folder, current_date)
+            os.makedirs(date_folder, exist_ok=True)
+
+            script_name = os.path.splitext(os.path.basename(script_filename))[0] if script_filename else 'output'
+            timestamp = datetime.now().strftime('%H%M%S')
+            output_file_name = f"{script_name}_{timestamp}.csv"
+            output_file_path = os.path.join(date_folder, output_file_name)
+
+            df.to_csv(output_file_path, index=False)
+            print(f"File successfully uploaded to {output_file_path}")
 
         return df
 
@@ -86,11 +119,62 @@ def download_and_parse_json(url):
         return None
 
 
-def map_column(df, df_column_name, mapping_column_name=None, dq=True, dq_export=False, script_name=None, full_map=False):
 
+def download_from_mysql(host, username, password, database, table, load_s3=False, output_folder='../../s3/temp_files', script_filename=None):
+    """
+    Downloads data from a MySQL database table and returns it as a Pandas DataFrame.
+    Optionally, saves the DataFrame as a CSV file in a specified folder.
+
+    Parameters:
+    - host (str): MySQL server host address.
+    - username (str): MySQL username.
+    - password (str): MySQL password.
+    - database (str): MySQL database name.
+    - table (str): Name of the table from which to download data.
+    - load_s3 (bool): Whether to save the DataFrame as a CSV file in the specified folder.
+    - output_folder (str): The folder to save the CSV file if load_s3 is True.
+    - script_filename (str): The full path of the script file for naming the output file.
+
+    Returns:
+    pd.DataFrame: DataFrame containing the downloaded data.
+    """
+    try:
+        conn = mysql.connector.connect(
+            host=host,
+            user=username,
+            password=password,
+            database=database
+        )
+
+        query = f"SELECT * FROM {table};"
+
+        df = pd.read_sql(query, conn)
+
+        conn.close()
+
+        if load_s3:
+            current_date = datetime.now().strftime('%Y%m%d')
+            date_folder = os.path.join(output_folder, current_date)
+            os.makedirs(date_folder, exist_ok=True)
+
+            script_name = os.path.splitext(os.path.basename(script_filename))[0] if script_filename else 'output'
+            timestamp = datetime.now().strftime('%H%M%S')
+            output_file_name = f"{script_name}_{timestamp}.csv"
+            output_file_path = os.path.join(date_folder, output_file_name)
+
+            df.to_csv(output_file_path, index=False)
+            print(f"File successfully uploaded to {output_file_path}")
+
+        return df
+
+    except mysql.connector.Error as e:
+        print(f"Error downloading data from MySQL: {e}")
+        return None
+
+def map_column(df, df_column_name, mapping_column_name=None, dq=True, dq_export=False, script_name=None, full_map=False):
     """
     Maps values in a DataFrame column based on a mapping Excel sheet and handles data quality (DQ) checks.
-
+    
     Parameters:
     df (pd.DataFrame): The DataFrame containing the column to be mapped.
     df_column_name (str): The name of the column in the DataFrame to be mapped.
@@ -100,19 +184,16 @@ def map_column(df, df_column_name, mapping_column_name=None, dq=True, dq_export=
     dq_export (bool): Whether to export the unmatched values to a DataFrame and an Excel file. Default is False.
     script_name (str): The name of the script or notebook calling this function. Used for naming the output file in dq_export.
     full_map (bool): Whether to replace input values not in the mapping dictionary with NaN. Default is False.
-
+    
     Returns:
     pd.Series: The mapped column as a Pandas Series.
     """
-
-
-    # Set the default mapping column name if not provided
+    
     if mapping_column_name is None:
         mapping_column_name = df_column_name
 
     try:
         mapping_df = pd.read_excel('static/Mapping.xlsx', sheet_name=mapping_column_name, header=None)
-
         mapping_dict = dict(zip(mapping_df.iloc[:, 1], mapping_df.iloc[:, 0]))
 
         unmatched_values = df[~df[df_column_name].isin(mapping_dict.keys())][df_column_name].unique()
@@ -124,16 +205,12 @@ def map_column(df, df_column_name, mapping_column_name=None, dq=True, dq_export=
 
         df[df_column_name] = mapped_column
 
-
-
         # Data Quality (DQ) checks
         if dq:
-            
-            if len(unmatched_values)>0:
+            if len(unmatched_values) > 0:
                 print("------------Unmatched Values------------")
                 for element in unmatched_values:
                     print(element)
-
 
             if dq_export:
                 dq_df = pd.DataFrame({
@@ -144,7 +221,6 @@ def map_column(df, df_column_name, mapping_column_name=None, dq=True, dq_export=
 
                 if is_notebook():
                     script_name = 'notebook'
-
                 elif script_name is None:
                     script_filename = os.path.basename(inspect.stack()[1].filename)
                     script_name = os.path.splitext(script_filename)[0]
@@ -160,16 +236,49 @@ def map_column(df, df_column_name, mapping_column_name=None, dq=True, dq_export=
                 print(f"DataFrame exported to {excel_file_path}")
 
                 return mapped_column, dq_df
-            
             else:
                 return mapped_column, unmatched_values
 
         return mapped_column
 
-
     except Exception as e:
         print(f"Error occurred while mapping column: {e}")
         return None
+
+def map_columns_from_dict(df, mapping_dict):
+    """
+    Maps values in multiple DataFrame columns based on a dictionary and handles data quality (DQ) checks.
+    
+    Parameters:
+    df (pd.DataFrame): The DataFrame containing the columns to be mapped.
+    mapping_dict (dict): A dictionary specifying the mapping details for each column.
+                         Keys are column names and values are dicts with keys: 'mapping_column_name', 'full_map', 'dq', 'dq_export'.
+    
+    Returns:
+    pd.DataFrame: The DataFrame with all specified columns mapped.
+    pd.DataFrame: The DataFrame containing all DQ information if dq_export is True, otherwise None.
+    """
+    all_dq_data = []
+
+    for df_column_name, settings in mapping_dict.items():
+        mapping_column_name = settings.get('mapping_column_name', df_column_name)
+        full_map = settings.get('full_map', False)
+        dq = settings.get('dq', True)
+        dq_export = settings.get('dq_export', False)
+        script_name = settings.get('script_name', None)
+
+        mapped_column, dq_data = map_column(
+            df, df_column_name, mapping_column_name, dq, dq_export, script_name, full_map
+        )
+
+        if dq_export and dq_data is not None:
+            all_dq_data.append(dq_data)
+
+    if all_dq_data:
+        all_dq_df = pd.concat(all_dq_data, ignore_index=True)
+        return df, all_dq_df
+
+    return df, None
 
 def force_int_conversion(df, column_name):
     """
@@ -187,12 +296,10 @@ def force_int_conversion(df, column_name):
             int_value = int(value)
             df.at[index, column_name] = int_value
         except (ValueError, TypeError):
-            # If conversion fails, leave the original value
             pass
     
     if pd.api.types.is_integer_dtype(df[column_name]):
         df[column_name] = df[column_name].astype(int)
-
 
 def adjust_dtype(df):
     """
@@ -266,16 +373,13 @@ def load_config(notebook_filename):
         dict: The configuration data.
     """
     try:
-        # Extract the base name from the filename (example_e.py -> example)
         script_name = os.path.basename(notebook_filename)
         base_name = os.path.splitext(script_name)[0].split('_')[0]
         
-        # Construct the path to the JSON configuration file
         base_path = os.path.abspath(os.path.join(os.path.dirname(notebook_filename), '..'))
         config_dir = os.path.join(base_path, 'config')
         config_file = os.path.join(config_dir, f'{base_name}.json')
         
-        # Read the JSON file into a dictionary
         if os.path.exists(config_file):
             with open(config_file, 'r') as file:
                 config = json.load(file)
@@ -287,10 +391,3 @@ def load_config(notebook_filename):
     except Exception as e:
         raise RuntimeError(f"Error loading config: {str(e)}")
 
-# Example usage with notebook_filename provided
-notebook_filename = 'c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\example_e.py'
-try:
-    config_data = load_config(notebook_filename)
-    print(config_data)
-except Exception as e:
-    print(f"Error: {str(e)}")

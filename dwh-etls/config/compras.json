@@ -14,5 +14,44 @@
         "source": "/data/source",
         "destination": "/data/destination",
         "schedule": "daily"
+    },
+    "extraction":{
+        "csv": {
+            "mapping_column_name": "sheet1",
+            "full_map": true,
+            "dq": true,
+            "dq_export": true,
+            "script_name": "script1"
+        },
+        "json": {
+            "mapping_column_name": "sheet2",
+            "full_map": false,
+            "dq": true,
+            "dq_export": false,
+            "script_name": "script2"
+        },
+        "sql": {
+            "mapping_column_name": "sheet2",
+            "full_map": false,
+            "dq": true,
+            "dq_export": false,
+            "script_name": "script2"
+        }
+    },
+    "mapping" : {
+        "column1": {
+            "mapping_column_name": "sheet1",
+            "full_map": true,
+            "dq": true,
+            "dq_export": true,
+            "script_name": "script1"
+        },
+        "column2": {
+            "mapping_column_name": "sheet2",
+            "full_map": false,
+            "dq": true,
+            "dq_export": false,
+            "script_name": "script2"
+        }
     }
 }
