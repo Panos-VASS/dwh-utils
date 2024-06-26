@@ -1,0 +1,53 @@
+{
+    "extraction": {
+        "output_excel_path": "../../s3/staging/",
+        "sql": [
+            {
+                "host": "192.168.1.17",
+                "username": "Vass",
+                "password": "WareHouse2024*",
+                "database": "intranet",
+                "table": "ahorro_control_stock",
+                "load_s3": false,
+                "output_folder": "../../s3/temp_files",
+                "script_filename": "c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\sql_extraction_1.py"
+            },
+            {
+                "host": "192.168.1.17",
+                "username": "Vass",
+                "password": "WareHouse2024*",
+                "database": "intranet",
+                "table": "ahorro_control_stock_detalle",
+                "load_s3": false,
+                "output_folder": "../../s3/temp_files",
+                "script_filename": "c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\sql_extraction_1.py"
+            },
+            {
+                "host": "192.168.1.17",
+                "username": "Vass",
+                "password": "WareHouse2024*",
+                "database": "intranet",
+                "table": "ahorro_control_stock_tienda",
+                "load_s3": false,
+                "output_folder": "../../s3/temp_files",
+                "script_filename": "c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\sql_extraction_1.py"
+            }
+        ]
+    },
+    "mapping": {
+        "column1": {
+            "mapping_column_name": "sheet1",
+            "full_map": true,
+            "dq": true,
+            "dq_export": true,
+            "script_name": "script1"
+        },
+        "column2": {
+            "mapping_column_name": "sheet2",
+            "full_map": false,
+            "dq": true,
+            "dq_export": false,
+            "script_name": "script2"
+        }
+    }
+}

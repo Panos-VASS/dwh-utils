@@ -15,30 +15,51 @@
         "destination": "/data/destination",
         "schedule": "daily"
     },
-    "extraction":{
-        "csv": {
-            "mapping_column_name": "sheet1",
-            "full_map": true,
-            "dq": true,
-            "dq_export": true,
-            "script_name": "script1"
-        },
-        "json": {
-            "mapping_column_name": "sheet2",
-            "full_map": false,
-            "dq": true,
-            "dq_export": false,
-            "script_name": "script2"
-        },
-        "sql": {
-            "mapping_column_name": "sheet2",
-            "full_map": false,
-            "dq": true,
-            "dq_export": false,
-            "script_name": "script2"
-        }
+    "extraction": {
+        "json": [
+            {
+                "url": "https://api.sampleapis.com/futurama/characters",
+                "load_s3": true,
+                "output_folder": "../../s3/temp_files",
+                "script_filename": "c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\json_extraction_1.py"
+            },
+            {
+                "url": "https://api.sampleapis.com/futurama/episodes",
+                "load_s3": true,
+                "output_folder": "../../s3/temp_files",
+                "script_filename": "c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\json_extraction_2.py"
+            }
+        ],
+        "sql": [
+            {
+                "host": "192.168.1.17",
+                "username": "Vass",
+                "password": "WareHouse2024*",
+                "database": "intranet",
+                "table": "ahorro_control_stock",
+                "load_s3": true,
+                "output_folder": "../../s3/temp_files",
+                "script_filename": "c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\sql_extraction_1.py"
+            }
+        ],
+        "csv": [
+            {
+                "url": "https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/titanic.csv",
+                "column_delimiter": null,
+                "load_s3": true,
+                "output_folder": "../../s3/temp_files",
+                "script_filename": "c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\csv_extraction_1.py"
+            },
+            {
+                "url": "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data",
+                "column_delimiter": null,
+                "load_s3": true,
+                "output_folder": "../../s3/temp_files",
+                "script_filename": "c:\\Users\\panagiotis.c\\OneDrive - Grupo VASS\\Desktop\\dwh-utils\\dwh-etls\\extraction\\csv_extraction_2.py"
+            }
+        ]
     },
-    "mapping" : {
+    "mapping": {
         "column1": {
             "mapping_column_name": "sheet1",
             "full_map": true,
